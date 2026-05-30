@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SimpliRoute Enterprise Demo — José Luis Arellano</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0a0e17;
+      color: #e2e8f0;
+      min-height: 100vh;
+      font-size: 13px
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #3b82f6;
+      border-radius: 2px
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .4
+      }
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateY(-8px);
+        opacity: 0
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1
+      }
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .btn {
+      padding: 9px 18px;
+      border-radius: 6px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s
+    }
+
+    .btn-p {
+      background: #3b82f6;
+      color: #fff
+    }
+
+    .btn-p:hover {
+      background: #2563eb
+    }
+
+    .btn-cta {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #fff;
+      font-size: 14px;
+      padding: 10px 20px;
+      box-shadow: 0 0 12px rgba(34, 197, 94, .4)
+    }
+
+    .btn-cta:hover {
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      box-shadow: 0 0 20px rgba(34, 197, 94, .6)
+    }
+
+    .btn-d {
+      background: #dc2626;
+      color: #fff
+    }
+
+    .btn-d:hover {
+      background: #b91c1c
+    }
+
+    .btn-s {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid #334155
+    }
+
+    .btn-s:hover {
+      background: #334155
+    }
+
+    .btn:disabled {
+      opacity: .4;
+      cursor: not-allowed
+    }
+
+    .card {
+      background: #111827;
+      border-radius: 8px;
+      border: 1px solid #1e293b;
+      overflow: hidden;
+      margin-bottom: 12px
+    }
+
+    .card-h {
+      padding: 12px 14px;
+      border-bottom: 1px solid #1e293b;
+      font-size: 13px;
+      font-weight: 600;
+      color: #3b82f6
+    }
+
+    .card-b {
+      padding: 14px
+    }
+
+    .grid {
+      display: grid;
+      gap: 12px
+    }
+
+    .g2 {
+      grid-template-columns: 1fr 1fr
+    }
+
+    .g3 {
+      grid-template-columns: 1fr 1fr 1fr
+    }
+
+    .g4 {
+      grid-template-columns: repeat(4, 1fr)
+    }
+
+    .g6 {
+      grid-template-columns: repeat(6, 1fr)
+    }
+
+    .kpi {
+      background: #0f172a;
+      padding: 12px;
+      text-align: center;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all .2s;
+      position: relative
+    }
+
+    .kpi:hover {
+      border: 1px solid #3b82f644
+    }
+
+    .kpi-v {
+      font-size: 24px;
+      font-weight: 700
+    }
+
+    .kpi-l {
+      font-size: 10px;
+      color: #64748b;
+      text-transform: uppercase
+    }
+
+    .kpi-help {
+      position: absolute;
+      top: 4px;
+      right: 6px;
+      font-size: 11px;
+      color: #475569;
+      cursor: help
+    }
+
+    .tooltip {
+      position: relative;
+      display: inline-block
+    }
+
+    .tooltip .tip-text {
+      visibility: hidden;
+      background: #1e293b;
+      color: #e2e8f0;
+      text-align: center;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      position: absolute;
+      z-index: 10;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      border: 1px solid #334155
+    }
+
+    .tooltip:hover .tip-text {
+      visibility: visible
+    }
+
+    .steps {
+      display: flex;
+      background: #0f172a;
+      border-bottom: 1px solid #1e293b;
+      overflow-x: auto
+    }
+
+    .step-btn {
+      padding: 10px 16px;
+      border: none;
+      background: transparent;
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      border-bottom: 2px solid transparent
+    }
+
+    .step-btn.active {
+      background: #1e293b;
+      color: #3b82f6;
+      border-bottom-color: #3b82f6
+    }
+
+    .step-btn.done {
+      color: #22c55e
+    }
+
+    .log-line {
+      font-size: 12px;
+      padding: 4px 0;
+      border-bottom: 1px solid #1e293b11;
+      font-family: 'Courier New', monospace;
+      animation: slideIn .3s
+    }
+
+    .tag {
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 700
+    }
+
+    .modal-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, .7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000
+    }
+
+    .modal {
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #334155;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      display: inline-block
+    }
+
+    .inc-row {
+      padding: 8px 0;
+      border-bottom: 1px solid #1e293b;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: slideIn .3s
+    }
+
+    .inc-row:hover {
+      background: #1e293b22
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px
+    }
+
+    th {
+      padding: 10px;
+      text-align: center;
+      color: #3b82f6;
+      font-weight: 600;
+      background: #1e293b
+    }
+
+    td {
+      padding: 10px;
+      border-bottom: 1px solid #1e293b
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #22c55e;
+      animation: pulse 1.5s infinite;
+      display: inline-block
+    }
+
+    .sr-link {
+      color: #3b82f6;
+      font-size: 10px;
+      text-decoration: none;
+      padding: 2px 6px;
+      border: 1px solid #3b82f644;
+      border-radius: 4px;
+      margin-left: 4px
+    }
+
+    .sr-link:hover {
+      background: #3b82f622
+    }
+
+    @media(max-width:768px) {
+
+      .g2,
+      .g3,
+      .g4,
+      .g6 {
+        grid-template-columns: 1fr
+      }
+
+      .steps {
+        flex-wrap: nowrap;
+        overflow-x: auto
+      }
+
+      .step-btn {
+        font-size: 11px;
+        padding: 8px 10px
+      }
+
+      .kpi-v {
+        font-size: 20px
+      }
+
+      .modal {
+        max-width: 95%;
+        padding: 16px
+      }
+
+      table {
+        font-size: 10px
+      }
+
+      th,
+      td {
+        padding: 6px 4px
+      }
+    }
+
+    @media(min-width:769px) and (max-width:1024px) {
+      .g4 {
+        grid-template-columns: repeat(2, 1fr)
+      }
+
+      .g6 {
+        grid-template-columns: repeat(3, 1fr)
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script>
+    const rand = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+    const pick = a => a[Math.floor(Math.random() * a.length)];
+
+    const PROBLEMS = [
+      { type: "FAILED", label: "Entrega fallida", icon: "❌", sev: "alta", action: "Reagendamiento automático vía WhatsApp" },
+      { type: "ADDRESS", label: "Dirección inválida", icon: "📍", sev: "alta", action: "Geocodificación inversa + contacto cliente" },
+      { type: "DEVIATION", label: "Desvío de ruta", icon: "⚠️", sev: "media", action: "Recálculo de ruta + alerta torre" },
+      { type: "DELAYED", label: "Retraso >30min", icon: "⏰", sev: "media", action: "Notificación proactiva al cliente" },
+      { type: "SYNC", label: "Desync OMS↔TMS", icon: "🔄", sev: "crítica", action: "Reconciliación automática + webhook" },
+      { type: "VEHICLE", label: "Falla mecánica", icon: "🔧", sev: "crítica", action: "Redistribución a vehículos cercanos" },
+    ];
+    const FLOWS = { FAILED: [{ f: "Driver", m: "POST", t: "TMS", ms: 67 }, { f: "ADA", m: "POST", t: "WhatsApp", ms: 92 }, { f: "WA", m: "WEBHOOK", t: "OMS", ms: 156 }, { f: "OMS", m: "PUT", t: "TMS", ms: 78 }], ADDRESS: [{ f: "TMS", m: "GET", t: "Geocode", ms: 120 }, { f: "ADA", m: "POST", t: "WhatsApp", ms: 89 }, { f: "WA", m: "WEBHOOK", t: "TMS", ms: 45 }], DEVIATION: [{ f: "GPS", m: "STREAM", t: "TMS", ms: 12 }, { f: "ADA", m: "POST", t: "TMS", ms: 234 }, { f: "TMS", m: "PUSH", t: "Driver", ms: 45 }], DELAYED: [{ f: "ADA", m: "POST", t: "WhatsApp", ms: 78 }, { f: "TMS", m: "PUT", t: "OMS", ms: 56 }], SYNC: [{ f: "OMS", m: "POST", t: "Gateway", ms: 34 }, { f: "GW", m: "WEBHOOK", t: "TMS", ms: 56 }, { f: "TMS", m: "PUT", t: "WMS", ms: 89 }, { f: "ADA", m: "POST", t: "OMS", ms: 67 }], VEHICLE: [{ f: "Driver", m: "POST", t: "TMS", ms: 34 }, { f: "ADA", m: "POST", t: "TMS", ms: 456 }, { f: "TMS", m: "PUSH", t: "3 Drivers", ms: 45 }] };
+    const sevC = s => s === "crítica" ? "#ef4444" : s === "alta" ? "#f59e0b" : "#3b82f6";
+    const mC = m => ({ POST: "#22c55e", GET: "#3b82f6", PUT: "#8b5cf6", WEBHOOK: "#f59e0b", PUSH: "#06b6d4", STREAM: "#ec4899" })[m] || "#94a3b8";
+    const KPI_TIPS = { Vehículos: "Unidades de reparto activas en la operación", Conductores: "Choferes asignados a vehículos", Entregas: "Visitas/paquetes programados para entrega", Capacidad: "Suma total de paquetes que puede transportar la flota" };
+    const RES_TIPS = { Detectadas: "Total de incidencias generadas durante la simulación", "Resueltas IA": "Incidencias resueltas automáticamente por el agente ADA", "API calls": "Número total de llamadas entre sistemas para resolver incidencias", "T. promedio": "Tiempo promedio de resolución por incidencia", "Tasa resolución": "Porcentaje de incidencias resueltas vs detectadas", "Entregas OK": "Entregas completadas exitosamente" };
+
+    let state = {
+      step: 0, token: "024e7b07f65dda126f8159aaa61827eeb371068d", connected: false, loading: false, srData: null,
+      incidents: [], resolved: [], stats: { total: 0, resolved: 0, avg: 0, calls: 0 },
+      log: [], simRunning: false, liveM: { delivered: 0, failed: 0, onRoute: 0 },
+      modal: null, incId: 0, intervals: [], operationCreated: false, simDone: false, typeCounts: {}, mapFilter: 'all'
+    };
+
+    async function apiCall(endpoint, method = "GET", body = null) {
+      const opts = { method, headers: { "x-token": state.token, "Content-Type": "application/json" } };
+      if (body) opts.body = JSON.stringify(body);
+      const r = await fetch(`/api/${endpoint}`, opts);
+      return r.json();
+    }
+    function clearIntervals() { state.intervals.forEach(clearInterval); state.intervals = []; }
+
+    async function autoConnect() {
+      state.loading = true; render();
+      try {
+        const data = await apiCall('status');
+        if (data.error) { state.loading = false; render(); return; }
+        state.srData = data; state.connected = true; state.loading = false;
+        state.liveM.onRoute = data.summary.visits || 0;
+        if ((data.summary.visits || 0) > 0) state.operationCreated = true;
+        render();
+      } catch (e) { state.loading = false; render(); }
+    }
+
+    function render() {
+      const steps = ["Objetivo", "Dashboard", "Simulación", "Resultados", "Propuesta"];
+      let html = `
+  <div style="background:#0f172a;border-bottom:1px solid #1e293b;padding:10px 16px;display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:14px">
+      <img src="/jlag.jpeg" alt="JLAG" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid #3b82f6">
+      <div><div style="font-weight:700;font-size:15px">TORRE DE CONTROL — RETAIL ENTERPRISE</div>
+      <div style="font-size:11px;color:#64748b">José Luis Arellano · SimpliRoute API Integration</div></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      ${state.connected ? `<span style="padding:4px 10px;border-radius:4px;background:rgba(34,197,94,.15);border:1px solid #22c55e44;font-size:11px;color:#22c55e"><span class="live-dot"></span> Conectado</span>` : ''}
+      <a href="https://app2.simpliroute.com" target="_blank" class="btn btn-cta" style="font-size:12px;padding:7px 14px;text-decoration:none">🚀 Ver en SimpliRoute</a>
+    </div>
+  </div>
+  <div class="steps">${steps.map((s, i) => `<button class="step-btn ${i === state.step ? 'active' : ''}${i < state.step ? ' done' : ''}" onclick="goStep(${i})">${i < state.step ? '✓ ' : ''}${i + 1}. ${s}</button>`).join('')}</div>
+  <div style="padding:14px;max-height:calc(100vh - 100px);overflow-y:auto">`;
+
+      // STEP 0: Objetivo
+      if (state.step === 0) {
+        html += `
+    <div style="max-width:750px;margin:20px auto">
+      <div class="card"><div class="card-b" style="padding:28px">
+        <div style="font-size:22px;font-weight:700;color:#3b82f6;margin-bottom:6px">🎯 Objetivo de este proyecto</div>
+        <div style="font-size:12px;color:#64748b;margin-bottom:18px">Simulador interactivo de logística de última milla — Diseñado por José Luis Arellano</div>
+        <div style="padding:14px;background:#0f172a;border-radius:8px;border:1px solid #1e293b;margin-bottom:16px">
+          <div style="font-size:14px;font-weight:600;color:#e2e8f0;margin-bottom:10px">El problema que resuelve</div>
+          <div style="font-size:13px;color:#94a3b8;line-height:1.8">
+            SimpliRoute tiene un cuello de botella crítico con sus clientes enterprise:<br><br>
+            • La persona que levanta requerimientos <b style="color:#f59e0b">no tiene perfil técnico</b> — llegan incompletos al equipo de desarrollo.<br>
+            • El equipo de desarrollo tiene una <b style="color:#f59e0b">cola larga de peticiones</b> y avanza más lento de lo que el cliente necesita.<br>
+            • El ciclo de ida y vuelta entre CS, Producto e Ingeniería <b style="color:#f59e0b">alarga implementaciones de semanas a meses</b>.<br><br>
+            Esto pone en riesgo la retención de cuentas enterprise que valen <b style="color:#22c55e">+$20,000 USD/mes</b>.
+          </div>
+        </div>
+        <div style="padding:14px;background:#0f172a;border-radius:8px;border:1px solid #22c55e33;margin-bottom:16px">
+          <div style="font-size:14px;font-weight:600;color:#22c55e;margin-bottom:10px">La solución: José Luis Arellano</div>
+          <div style="font-size:13px;color:#94a3b8;line-height:1.8">
+            Una persona que entiende el problema del cliente, lo documenta con calidad técnica, lo desarrolla, lo pone en producción y asegura que el cliente lo use.<br><br>
+            <b style="color:#e2e8f0">No es un puente entre equipos — es el equipo completo en una persona.</b><br><br>
+            <span style="color:#3b82f6">3 roles en 1:</span> Customer Success Leader + Ingeniero de Software Senior + Líder Comercial-Técnico.
+          </div>
+        </div>
+        <div style="padding:14px;background:#0f172a;border-radius:8px;border:1px solid #1e293b;margin-bottom:16px">
+          <div style="font-size:14px;font-weight:600;color:#8b5cf6;margin-bottom:10px">Qué demuestra este simulador</div>
+          <div style="font-size:13px;color:#94a3b8;line-height:1.8">
+            Conecta <b style="color:#e2e8f0">en vivo con la API real de SimpliRoute</b> para demostrar que José Luis puede:<br><br>
+            ✅ Integrar sistemas enterprise vía API REST en tiempo real<br>
+            ✅ Entender la operación logística de última milla<br>
+            ✅ Construir soluciones completas en horas, no semanas<br>
+            ✅ Traducir tecnología a lenguaje de negocio
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:20px">
+          <button class="btn btn-cta" onclick="goStep(1)" style="font-size:15px;padding:12px 28px">▶ Comenzar demostración →</button>
+        </div>
+      </div></div>
+    </div>`;
+      }
+
+      // STEP 1: Dashboard
+      if (state.step === 1) {
+        const s = state.srData?.summary || {};
+        html += `
+    <div class="card" style="margin-bottom:12px;border:1px solid #3b82f633">
+      <div class="card-b" style="padding:10px 14px;font-size:12px;color:#94a3b8;line-height:1.6">
+        <b style="color:#3b82f6">📊 Dashboard de operación:</b> Aquí se gestiona la operación completa de un retailer como Liverpool en CDMX. Los KPIs muestran el estado actual de la flota, conductores y entregas conectados en tiempo real con la API de SimpliRoute.
+      </div>
+    </div>
+    <div class="grid g4" style="margin-bottom:12px">
+      ${[['Vehículos', s.vehicles || 0, '#3b82f6'], ['Conductores', s.drivers || 0, '#8b5cf6'], ['Entregas', s.visits || 0, '#22c55e'], ['Capacidad', s.total_capacity || 0, '#f59e0b']].map(([l, v, c]) =>
+          `<div class="kpi" onclick="showDetail('${l}')"><span class="kpi-help tooltip">❓<span class="tip-text">${KPI_TIPS[l]}</span></span><div class="kpi-l">${l}</div><div class="kpi-v" style="color:${c}">${v}</div></div>`
+        ).join('')}
+    </div>
+    <div class="grid g2">
+      <div class="card"><div class="card-h">🚛 FLOTA</div><div class="card-b">
+        ${(state.srData?.vehicles || []).map(v => `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #1e293b">
+          <span style="font-size:12px;font-weight:600;flex:1">${v.name}</span>
+          <span style="font-size:11px;color:#64748b">Cap: ${v.capacity}</span>
+          <span style="font-size:11px;color:#8b5cf6">👤 ${v.driver_name}</span>
+          <a href="https://app3.simpliroute.com/settings/vehicles/${v.id}" target="_blank" class="sr-link">↗ SR</a>
+        </div>`).join('') || '<p style="color:#64748b;font-size:12px;text-align:center;padding:16px">Sin vehículos</p>'}
+      </div></div>
+      <div class="card"><div class="card-h">📦 ENTREGAS (${s.visits || 0})</div><div class="card-b" style="max-height:220px;overflow-y:auto">
+        ${(state.srData?.visits || []).slice(0, 10).map(v => `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #1e293b">
+          <span style="font-size:12px;flex:1">${v.title}</span>
+          <span style="font-size:10px;color:#64748b">${(v.address || '').substring(0, 25)}</span>
+          <span style="font-size:10px;color:#f59e0b">📦${v.load || 0}</span>
+          <a href="https://app3.simpliroute.com/es/visits" target="_blank" class="sr-link">↗</a>
+        </div>`).join('') || '<p style="color:#64748b;font-size:12px;text-align:center;padding:16px">Sin entregas</p>'}
+        ${(s.visits || 0) > 10 ? `<p style="font-size:11px;color:#64748b;text-align:center;margin-top:6px">...y ${s.visits - 10} más</p>` : ''}
+      </div></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;align-items:center">
+      ${!state.operationCreated ? `
+      <div class="tooltip"><button class="btn btn-p" onclick="createAll()" ${state.loading ? 'disabled' : ''}>${state.loading ? '<span class="spinner"></span> Creando...' : '🚀 Crear operación Liverpool'}</button>
+        <span class="tip-text" style="bottom:auto;top:125%">Crea 5 vehículos, 5 conductores, 20 entregas y 1 plan de ruteo</span></div>`: `
+      <button class="btn btn-cta" onclick="goStep(2)">▶ Ir a Simulación →</button>`}
+      <div class="tooltip"><button class="btn btn-d" onclick="confirmDelete()" ${state.loading ? 'disabled' : ''}>${state.loading ? '<span class="spinner"></span>' : '🗑️ Borrar todo'}</button>
+        <span class="tip-text" style="bottom:auto;top:125%">Elimina vehículos, conductores, entregas y planes</span></div>
+      <button class="btn btn-s" onclick="refreshStatus()" ${state.loading ? 'disabled' : ''}>🔄 Refrescar</button>
+    </div>`;
+      }
+
+      // STEP 2: Simulation
+      if (state.step === 2) {
+        const m = state.liveM;
+        html += `
+    <div class="card" style="margin-bottom:12px;border:1px solid #8b5cf633">
+      <div class="card-b" style="padding:10px 14px;font-size:12px;color:#94a3b8;line-height:1.6">
+        <b style="color:#8b5cf6">🤖 Simulación de incidencias:</b> Se generan 2 incidencias de cada tipo (12 total). El agente ADA detecta cada problema y lo resuelve automáticamente. Haz click en cualquier incidencia activa para ver el flujo completo de llamadas API entre sistemas.
+      </div>
+    </div>
+    <div class="grid g6" style="margin-bottom:12px">
+      ${[['Exitosas', m.delivered, '#22c55e'], ['Fallidas', m.failed, '#ef4444'], ['En ruta', m.onRoute, '#3b82f6'], ['Activas', state.incidents.length, '#f59e0b'], ['Resueltas IA', state.stats.resolved, '#8b5cf6'], ['T. promedio', state.stats.avg + 'ms', '#06b6d4']].map(([l, v, c]) =>
+          `<div class="kpi"><div class="kpi-l">${l}</div><div class="kpi-v" style="color:${c}">${v}</div></div>`
+        ).join('')}
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      ${!state.simDone ? `<button class="btn ${state.simRunning ? 'btn-d' : 'btn-p'}" onclick="toggleSim()">${state.simRunning ? '⏹ Detener' : '▶ Iniciar simulación'}</button>` : ''}
+      ${state.simDone ? `<button class="btn btn-cta" onclick="goStep(3)">📊 Ver resultados →</button>` : `<button class="btn btn-s" onclick="goStep(3)">📊 Ver resultados →</button>`}
+    </div>
+    <div class="grid g2">
+      <div class="card"><div class="card-h">⚡ TODAS LAS INCIDENCIAS (${state.stats.total})</div>
+        <div class="card-b" style="max-height:320px;overflow-y:auto">
+        ${state.stats.total === 0 ? '<p style="color:#64748b;font-size:12px;text-align:center;padding:20px">' + (state.simRunning ? 'Procesando...' : 'Inicia la simulación') + '</p>' :
+            [...state.incidents.map(inc => ({ ...inc, status: 'activa' })), ...state.resolved.map(r => ({ ...r, status: 'resuelta' }))].sort((a, b) => b.id - a.id).map(inc => `<div class="inc-row" onclick="${inc.status === 'activa' ? `resolveInc(${inc.id})` : `showIncDetail(${inc.id})`}">
+          <span style="font-size:16px">${inc.problem.icon}</span>
+          <div style="flex:1"><div style="font-size:12px;font-weight:600">${inc.problem.label}</div>
+          <div style="font-size:10px;color:#64748b">${inc.visit} · ${inc.vehicle}</div></div>
+          ${inc.status === 'resuelta' ? `<span class="tag" style="background:#22c55e22;color:#22c55e">✅ RESUELTA</span>` : `<span class="tag" style="background:${sevC(inc.problem.sev)}22;color:${sevC(inc.problem.sev)}">⏳ ${inc.problem.sev.toUpperCase()}</span>`}
+        </div>`).join('')}
+      </div></div>
+      <div class="card"><div class="card-h">📋 LOG AGENTE IA — Detección y resolución en tiempo real</div>
+        <div class="card-b" style="max-height:300px;overflow-y:auto;font-family:'Courier New',monospace">
+        ${state.log.length === 0 ? '<p style="color:#64748b;font-size:12px;text-align:center;padding:20px">El log muestra cada acción del agente ADA: detección de incidencias, llamadas API entre sistemas y resoluciones automáticas.</p>' :
+            state.log.map(l => `<div class="log-line" style="color:${l.includes('✅') ? '#22c55e' : l.includes('🔍') ? '#f59e0b' : '#94a3b8'}">${l}</div>`).join('')}
+      </div></div>
+    </div>`;
+      }
+
+      // STEP 3: Results
+      if (state.step === 3) {
+        const st = state.stats;
+        html += `
+    <div class="grid g2" style="margin-bottom:12px">
+      <div class="card"><div class="card-h">📊 KPIs CONSOLIDADOS</div><div class="card-b"><div class="grid g3">
+        ${[['Detectadas', st.total, '#f59e0b'], ['Resueltas IA', st.resolved, '#22c55e'], ['API calls', st.calls, '#3b82f6'], ['T. promedio', st.avg + 'ms', '#8b5cf6'], ['Tasa resolución', st.total ? Math.round(st.resolved / st.total * 100) + '%' : '0%', '#06b6d4'], ['Entregas OK', state.liveM.delivered, '#22c55e']].map(([l, v, c]) =>
+          `<div class="kpi" onclick="showResDetail('${l}')"><span class="kpi-help tooltip">❓<span class="tip-text">${RES_TIPS[l] || ''}</span></span><div class="kpi-l">${l}</div><div class="kpi-v" style="color:${c}">${v}</div></div>`
+        ).join('')}
+      </div></div></div>
+      <div class="card"><div class="card-h">🤖 RESOLUCIONES POR TIPO</div><div class="card-b">
+        ${PROBLEMS.map(p => {
+          const c = state.resolved.filter(r => r.problem.type === p.type).length; return `
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #1e293b;cursor:pointer" onclick="showTypeHistory('${p.type}')">
+            <span style="font-size:16px">${p.icon}</span><span style="flex:1;font-size:12px">${p.label}</span>
+            <span style="font-size:15px;font-weight:700;color:#22c55e">${c}</span>
+          </div>`;
+        }).join('')}
+      </div></div>
+    </div>
+    <div class="card"><div class="card-h" style="display:flex;justify-content:space-between;align-items:center">
+      <span>🗺️ MAPA DE RECORRIDOS — CDMX</span>
+      <div style="display:flex;gap:4px;flex-wrap:wrap">
+        <button class="btn btn-s" style="font-size:10px;padding:4px 8px;${state.mapFilter === 'all' || !state.mapFilter ? 'background:#3b82f6;color:#fff' : ''}" onclick="setMapFilter('all')">Todas</button>
+        <button class="btn btn-s" style="font-size:10px;padding:4px 8px;${state.mapFilter === 'ok' ? 'background:#22c55e;color:#fff' : ''}" onclick="setMapFilter('ok')">✅ Exitosas</button>
+        <button class="btn btn-s" style="font-size:10px;padding:4px 8px;${state.mapFilter === 'pending' ? 'background:#f59e0b;color:#fff' : ''}" onclick="setMapFilter('pending')">⏳ Pendientes</button>
+      </div>
+    </div><div class="card-b" style="padding:0;height:350px;position:relative">
+      <div id="map-container" style="width:100%;height:100%;border-radius:0 0 8px 8px"></div>
+      <div style="position:absolute;bottom:8px;left:8px;background:#111827ee;padding:6px 10px;border-radius:6px;font-size:10px;display:flex;gap:12px;border:1px solid #1e293b;z-index:1000">
+        <span>🟢 Exitosas: ${state.resolved.length}</span>
+        <span>🟡 Pendientes: ${state.incidents.length}</span>
+        <span>📍 CEDIS: Santa Fe</span>
+      </div>
+    </div></div>
+    <div style="display:flex;justify-content:space-between;margin-top:12px">
+      <button class="btn btn-s" onclick="goStep(2)">← Simulación</button>
+      <button class="btn btn-cta" onclick="goStep(4)">Ver propuesta →</button>
+    </div>`;
+      }
+
+      // STEP 4: Proposal (sin tabla de remuneración, con plan 12 meses)
+      if (state.step === 4) {
+        html += `
+    <div style="max-width:720px;margin:0 auto">
+      <div class="card"><div class="card-b" style="text-align:center;padding:24px 16px">
+        <div style="font-size:20px;font-weight:700;color:#3b82f6">PROPUESTA DE CONTRIBUCIÓN ESTRATÉGICA</div>
+        <div style="font-size:13px;color:#64748b;margin:6px 0 18px">José Luis Arellano · Technical Implementation Lead</div>
+        <div style="padding:14px;background:#0f172a;border-radius:8px;border:1px solid #1e293b;text-align:center;margin-bottom:16px">
+          <div style="font-size:11px;font-weight:700;color:#3b82f6;margin-bottom:8px">SUPER PODER</div>
+          <div style="font-size:13px;line-height:1.8">
+            Vivir y entender el problema <b style="color:#3b82f6">(Requerimientos)</b><br>
+            Que todos lo entiendan <b style="color:#3b82f6">(Documentar, Exponer, Negociar)</b><br>
+            Ponerlo en producción <b style="color:#3b82f6">(FullStack Dev & DevOps)</b><br>
+            Hacer que las personas lo usen <b style="color:#3b82f6">(Adopción & UX)</b>
+          </div>
+        </div>
+      </div></div>
+      <div class="card"><div class="card-h">🗓️ PLAN DE 12 MESES</div><div class="card-b">
+        <table><thead><tr><th style="text-align:left">Fase</th><th>Período</th><th>Objetivo</th><th>Entregable</th></tr></thead>
+        <tbody>
+          <tr><td style="color:#3b82f6;font-weight:600">Onboarding</td><td style="text-align:center">Mes 1-2</td><td>Inmersión en producto y cliente Liverpool</td><td style="text-align:center">Diagnóstico técnico</td></tr>
+          <tr><td style="color:#3b82f6;font-weight:600">Implementación</td><td style="text-align:center">Mes 2-4</td><td>Integración enterprise Liverpool en producción</td><td style="text-align:center">Liverpool live</td></tr>
+          <tr><td style="color:#3b82f6;font-weight:600">Escalamiento</td><td style="text-align:center">Mes 4-6</td><td>Replicar modelo en 2-3 cuentas más</td><td style="text-align:center">3-4 cuentas activas</td></tr>
+          <tr><td style="color:#3b82f6;font-weight:600">Consolidación</td><td style="text-align:center">Mes 6-9</td><td>Playbook enterprise + métricas de éxito</td><td style="text-align:center">Proceso documentado</td></tr>
+          <tr><td style="color:#22c55e;font-weight:600">Liderazgo</td><td style="text-align:center">Mes 9-12</td><td>Liderar equipo de implementación enterprise</td><td style="text-align:center;color:#22c55e;font-weight:700">5-8 cuentas + equipo</td></tr>
+        </tbody></table>
+      </div></div>
+      <div class="card"><div class="card-h">📈 IMPACTO FINANCIERO PROYECTADO</div><div class="card-b">
+        <table><thead><tr><th style="text-align:left">Indicador</th><th>Mes 3</th><th>Mes 6</th><th>Mes 12</th></tr></thead>
+        <tbody>
+          <tr><td>Cuentas enterprise</td><td style="text-align:center">1 (Liverpool)</td><td style="text-align:center">3-4</td><td style="text-align:center;color:#22c55e;font-weight:700">5-8</td></tr>
+          <tr><td>Revenue protegido</td><td style="text-align:center">$20K/mes</td><td style="text-align:center">$60K+/mes</td><td style="text-align:center;color:#22c55e;font-weight:700">$120K+/mes</td></tr>
+          <tr><td>Upsell generado</td><td style="text-align:center">Diagnóstico</td><td style="text-align:center">$10K+</td><td style="text-align:center;color:#22c55e;font-weight:700">$40K+</td></tr>
+        </tbody></table>
+        <div style="margin-top:12px;padding:10px;background:#22c55e11;border-radius:6px;border:1px solid #22c55e33;font-size:12px;color:#22c55e">
+          💡 Retener una cuenta Liverpool (~$240K USD/año) cubre el salario anual completo múltiples veces.
+        </div>
+      </div></div>
+      <div class="card"><div class="card-b" style="text-align:center;padding:24px">
+        <div style="font-size:14px;font-style:italic;color:#3b82f6;line-height:1.7;margin-bottom:10px">
+          "No levanto tickets de soporte. Entiendo el problema del cliente,<br>diseño la solución y la implemento."
+        </div>
+        <div style="font-size:12px;font-style:italic;color:#64748b;line-height:1.7;margin-bottom:18px">
+          "El que entiende el problema del cliente, es el mismo que puede desarrollar la solución."
+        </div>
+        <div style="font-weight:700;font-size:16px">José Luis Arellano</div>
+        <div style="font-size:12px;color:#3b82f6;margin-bottom:8px">Software Engineer · Forward Deployed · LATAM</div>
+        <div style="font-size:13px;color:#94a3b8;margin-bottom:18px">
+          <a href="mailto:moflesillo@gmail.com" style="color:#3b82f6;text-decoration:none">📧 moflesillo@gmail.com</a> &nbsp;·&nbsp;
+          <a href="https://wa.me/526672148031" target="_blank" style="color:#22c55e;text-decoration:none">💬 +52 667 214 8031</a> &nbsp;·&nbsp;
+          <a href="https://linkedin.com/in/jluisarellano" target="_blank" style="color:#0a66c2;text-decoration:none">🔗 LinkedIn</a>
+        </div>
+        <a href="/propuesta.pdf" target="_blank" class="btn btn-cta" style="text-decoration:none;display:inline-block;font-size:14px;padding:12px 24px">📄 Ver propuesta económica basada en resultados (PDF)</a>
+      </div></div>
+    </div>`;
+      }
+
+      // Modal
+      if (state.modal) {
+        html += `<div class="modal-bg" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
+      <div style="display:flex;justify-content:space-between;margin-bottom:14px">
+        <span style="font-weight:700;font-size:14px;color:#3b82f6">${state.modal.title}</span>
+        <button onclick="closeModal()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:18px">✕</button>
+      </div>
+      <div style="font-size:12px">${state.modal.content}</div>
+    </div></div>`;
+      }
+      html += `<div style="margin-top:18px;text-align:center;font-size:10px;color:#475569">
+    Desarrollado por José Luis Arellano · Express + Vanilla JS · SimpliRoute API · AI Orchestration
+  </div></div>`;
+      document.getElementById('app').innerHTML = html;
+    }
+
+    // ── ACTIONS ──
+    function goStep(n) { state.step = n; render(); }
+    async function refreshStatus() {
+      state.loading = true; render();
+      state.srData = await apiCall('status');
+      if ((state.srData.summary?.visits || 0) > 0) state.operationCreated = true;
+      else state.operationCreated = false;
+      state.loading = false; render();
+    }
+    async function createAll() {
+      showModal('🚀 Crear operación Liverpool', `
+    <div style="line-height:1.8;margin-bottom:14px">
+      <p style="margin-bottom:10px">Se ejecutarán <b style="color:#3b82f6">~35 llamadas API</b> encadenadas:</p>
+      <div style="padding:10px;background:#0f172a;border-radius:6px;border:1px solid #1e293b">
+        ✅ 5 vehículos con base en CEDIS Santa Fe<br>✅ 5 conductores con credenciales<br>✅ Vincular conductor↔vehículo<br>✅ 20 entregas con direcciones reales CDMX<br>✅ 1 plan de ruteo
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button class="btn btn-p" onclick="doCreate()">✅ Confirmar</button>
+      <button class="btn btn-s" onclick="closeModal()">Cancelar</button>
+    </div>`);
+    }
+    async function doCreate() {
+      closeModal(); state.loading = true; render();
+      const result = await apiCall('create', 'POST');
+      state.srData = await apiCall('status');
+      state.liveM.onRoute = state.srData.summary.visits || 0;
+      state.operationCreated = true; state.loading = false;
+      showModal('✅ Operación creada', (result.log ? result.log.map(l => `<div class="log-line">${l}</div>`).join('') : 'OK') +
+        `<div style="text-align:center;margin-top:14px"><button class="btn btn-cta" onclick="closeModal();goStep(2)">▶ Ir a Simulación →</button></div>`);
+      render();
+    }
+    function confirmDelete() {
+      const s = state.srData?.summary || {};
+      showModal('⚠️ Confirmar eliminación', `
+    <div style="line-height:1.8;margin-bottom:14px;color:#f87171">
+      <p style="margin-bottom:10px;font-weight:600">Se eliminarán permanentemente:</p>
+      <div style="padding:10px;background:#0f172a;border-radius:6px;border:1px solid #dc262644">
+        🚛 ${s.vehicles || 0} vehículos<br>👤 ${s.drivers || 0} conductores<br>📦 ${s.visits || 0} entregas<br>🗺️ ${s.plans || 0} planes
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button class="btn btn-d" onclick="doDelete()">🗑️ Sí, borrar todo</button>
+      <button class="btn btn-s" onclick="closeModal()">Cancelar</button>
+    </div>`);
+    }
+    async function doDelete() {
+      closeModal(); state.loading = true; render();
+      await apiCall('delete', 'POST');
+      state.srData = await apiCall('status');
+      state.operationCreated = false; state.loading = false; render();
+    }
+    async function resetAll() {
+      if (!confirm('¿Reiniciar simulación?')) return;
+      clearIntervals(); state.simRunning = false; state.simDone = false;
+      state.incidents = []; state.resolved = []; state.stats = { total: 0, resolved: 0, avg: 0, calls: 0 };
+      state.log = []; state.liveM = { delivered: 0, failed: 0, onRoute: state.srData?.summary?.visits || 0 };
+      state.typeCounts = {}; state.step = 1; render();
+    }
+
+    // ── SIMULATION (2 of each type = 12 total, then stop) ──
+    function toggleSim() {
+      if (state.simRunning) { state.simRunning = false; clearIntervals(); render(); return; }
+      state.simRunning = true; state.simDone = false; state.typeCounts = {};
+      startSim(); render();
+      // Also execute visits in SimpliRoute API for real reports
+      executeVisitsInSR();
+    }
+    async function executeVisitsInSR() {
+      try {
+        const result = await apiCall('simulate', 'POST');
+        if (result.results) {
+          state.liveM.delivered = result.results.completed || 0;
+          state.liveM.failed = result.results.failed || 0;
+          state.log.unshift(`[${new Date().toLocaleTimeString()}] 📡 API SimpliRoute: ${result.results.completed} visitas completadas, ${result.results.failed} fallidas — datos reales en reportes SR`);
+          render();
+        }
+      } catch (e) { console.log('SR simulate error:', e); }
+    }
+    function startSim() {
+      const visits = state.srData?.visits || [{ title: "Entrega Demo" }];
+      const vehs = state.srData?.vehicles || [{ name: "VH-001" }];
+      const MAX_PER_TYPE = 2; const TOTAL_MAX = PROBLEMS.length * MAX_PER_TYPE;
+
+      state.intervals.push(setInterval(() => {
+        if (state.stats.total >= TOTAL_MAX) { stopSim(); return; }
+        // Pick a type that hasn't reached max
+        const available = PROBLEMS.filter(p => (state.typeCounts[p.type] || 0) < MAX_PER_TYPE);
+        if (available.length === 0) { stopSim(); return; }
+        const prob = pick(available);
+        state.typeCounts[prob.type] = (state.typeCounts[prob.type] || 0) + 1;
+        state.incId++;
+        const v = pick(visits).title || "Entrega";
+        const vh = pick(vehs).name || "VH-?";
+        state.incidents.unshift({ id: state.incId, problem: prob, visit: v, vehicle: vh });
+        state.stats.total++;
+        state.log.unshift(`[${new Date().toLocaleTimeString()}] 🔍 ADA detecta: ${prob.label} en ${v} (${vh})`);
+        if (state.log.length > 30) state.log.pop();
+        render();
+      }, rand(1500, 2500)));
+
+      state.intervals.push(setInterval(() => {
+        if (state.incidents.length > 0) {
+          const inc = state.incidents[state.incidents.length - 1];
+          doResolve(inc, false);
+        }
+      }, rand(2500, 4000)));
+
+      state.intervals.push(setInterval(() => {
+        state.liveM.delivered += rand(1, 3);
+        render();
+      }, 3000));
+    }
+    function stopSim() {
+      clearIntervals(); state.simRunning = false; state.simDone = true;
+      state.log.unshift(`[${new Date().toLocaleTimeString()}] 🏁 Simulación completada — 12 incidencias procesadas`);
+      render();
+    }
+    function resolveInc(id) {
+      const inc = state.incidents.find(i => i.id === id);
+      if (!inc) return;
+      doResolve(inc, true);
+    }
+    function doResolve(inc, showFlowModal) {
+      state.incidents = state.incidents.filter(i => i.id !== inc.id);
+      const flow = FLOWS[inc.problem.type] || FLOWS.DELAYED;
+      const lat = flow.reduce((a, c) => a + c.ms, 0);
+      state.resolved.unshift({ ...inc, lat, calls: flow.length });
+      if (state.resolved.length > 50) state.resolved.pop();
+      state.stats.resolved++;
+      state.stats.calls += flow.length;
+      state.stats.avg = Math.round(((state.stats.avg * (state.stats.resolved - 1)) + lat) / state.stats.resolved);
+      state.liveM.delivered++;
+      state.liveM.failed = Math.max(0, state.liveM.failed - 1);
+      state.log.unshift(`[${new Date().toLocaleTimeString()}] ✅ Resuelto: ${inc.problem.label} — ${inc.visit} (${lat}ms, ${flow.length} calls)`);
+      if (showFlowModal) {
+        showModal(`${inc.problem.icon} ${inc.problem.label}`,
+          `<div style="margin-bottom:10px;color:#64748b">${inc.visit} · ${inc.vehicle}</div>
+      <div style="margin-bottom:8px;font-size:11px;color:#94a3b8">Flujo de llamadas API entre sistemas:</div>`+
+          flow.map(c => `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;padding:5px 8px;background:#1a2332;border-radius:4px">
+        <span style="font-size:11px;color:#94a3b8;width:65px">${c.f}</span>
+        <span style="font-size:11px;color:${mC(c.m)};font-weight:700;width:60px;text-align:center">${c.m}</span>
+        <div style="flex:1;height:1px;background:#3b82f6"></div>
+        <span style="font-size:11px;color:#94a3b8;width:65px;text-align:right">${c.t}</span>
+        <span style="font-size:11px;color:#22c55e;width:40px;text-align:right">${c.ms}ms</span>
+      </div>`).join('') +
+          `<div style="margin-top:10px;padding:8px;background:#0f172a;border-radius:4px;font-size:11px;color:#64748b">🤖 ADA: ${inc.problem.action}</div>`);
+      }
+      render();
+    }
+
+    // ── MODALS & DETAILS ──
+    function showModal(title, content) { state.modal = { title, content }; render(); }
+    function closeModal() { state.modal = null; render(); }
+
+    function showDetail(label) {
+      const d = state.srData; if (!d) return;
+      let content = '';
+      if (label === 'Vehículos') content = (d.vehicles || []).map(v => `<div style="padding:8px 0;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:8px"><span style="flex:1">🚛 ${v.name} · Cap: ${v.capacity} · 👤 ${v.driver_name}</span><a href="https://app3.simpliroute.com/settings/vehicles/${v.id}" target="_blank" class="sr-link">↗ SimpliRoute</a></div>`).join('') || 'Sin datos';
+      else if (label === 'Conductores') content = (d.drivers || []).map(v => `<div style="padding:8px 0;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:8px"><span style="flex:1">👤 ${v.name} (ID: ${v.id})</span><a href="https://app3.simpliroute.com/settings/users/${v.id}" target="_blank" class="sr-link">↗ SimpliRoute</a></div>`).join('') || 'Sin datos';
+      else if (label === 'Entregas') content = (d.visits || []).map(v => `<div style="padding:6px 0;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:8px"><span style="flex:1;font-size:11px">📦 ${v.title} · ${(v.address || '').substring(0, 35)}</span><a href="https://app3.simpliroute.com/es/visits" target="_blank" class="sr-link">↗</a></div>`).join('') || 'Sin datos';
+      else if (label === 'Capacidad') content = `<div style="font-size:13px;margin-bottom:10px">Capacidad total: <b style="color:#f59e0b">${d.summary.total_capacity || 0} paquetes</b></div>${(d.vehicles || []).map(v => `<div style="padding:6px 0;border-bottom:1px solid #1e293b;display:flex;justify-content:space-between"><span>🚛 ${v.name}</span><span style="color:#f59e0b;font-weight:700">${v.capacity} paq</span></div>`).join('')}<div style="margin-top:10px;padding:8px;background:#f59e0b11;border-radius:6px;border:1px solid #f59e0b33;font-size:11px;color:#f59e0b">Utilización: ${d.summary.total_capacity ? Math.round((d.summary.total_load || 0) / (d.summary.total_capacity) * 100) : 0}%</div>`;
+      showModal(label, content);
+    }
+
+    function showResDetail(label) {
+      const st = state.stats;
+      let content = `<div style="font-size:13px;margin-bottom:8px"><b>${label}:</b> ${RES_TIPS[label] || ''}</div>`;
+      if (label === 'Resueltas IA') content += `<div style="margin-top:8px">${state.resolved.slice(0, 8).map(r => `<div style="padding:4px 0;border-bottom:1px solid #1e293b;font-size:11px">${r.problem.icon} ${r.problem.label} — ${r.visit} (${r.lat}ms)</div>`).join('')}</div>`;
+      else if (label === 'API calls') content += `<div style="margin-top:8px;font-size:11px;color:#94a3b8">Cada resolución implica entre 2-4 llamadas API entre Driver→TMS→ADA→WhatsApp→OMS. Total acumulado: <b style="color:#3b82f6">${st.calls}</b></div>`;
+      else content += `<div style="margin-top:8px;font-size:13px;color:#e2e8f0">Valor actual: <b>${label === 'T. promedio' ? st.avg + 'ms' : label === 'Tasa resolución' ? (st.total ? Math.round(st.resolved / st.total * 100) + '%' : '0%') : label === 'Entregas OK' ? state.liveM.delivered : st.total}</b></div>`;
+      showModal(`📊 ${label}`, content);
+    }
+
+    function showTypeHistory(type) {
+      const items = state.resolved.filter(r => r.problem.type === type);
+      const p = PROBLEMS.find(p => p.type === type);
+      const flow = FLOWS[type] || FLOWS.DELAYED;
+      let content = `<div style="margin-bottom:10px;font-size:12px;color:#94a3b8">${p.icon} <b>${p.label}</b> — ${items.length} resoluciones</div>
+    <div style="margin-bottom:8px;font-size:11px;color:#64748b">Acción ADA: ${p.action}</div>
+    <div style="margin-bottom:12px;padding:8px;background:#0f172a;border-radius:6px;border:1px solid #1e293b">
+      <div style="font-size:10px;color:#64748b;margin-bottom:4px">Flujo de resolución:</div>
+      ${flow.map(c => `<span style="font-size:10px;color:${mC(c.m)};font-weight:600">${c.f}→${c.m}→${c.t} (${c.ms}ms)</span>`).join(' · ')}
+    </div>`;
+      content += items.map(r => `<div style="padding:8px 0;border-bottom:1px solid #1e293b;font-size:12px">
+    <div><span style="color:#22c55e">✅</span> <b>${r.visit}</b></div>
+    <div style="font-size:11px;color:#64748b;margin-top:2px">🚛 ${r.vehicle} · ⏱️ ${r.lat}ms · 📡 ${r.calls} API calls</div>
+  </div>`).join('') || '<p style="color:#64748b">Sin resoluciones de este tipo</p>';
+      showModal(`${p.icon} Historial: ${p.label}`, content);
+    }
+
+    function showIncDetail(id) {
+      const r = state.resolved.find(i => i.id === id);
+      if (!r) return;
+      const flow = FLOWS[r.problem.type] || FLOWS.DELAYED;
+      showModal(`${r.problem.icon} ${r.problem.label} — Resuelta`, `
+      <div style="line-height:1.8;margin-bottom:12px">
+        <b>Entrega:</b> ${r.visit}<br>
+        <b>Vehículo:</b> ${r.vehicle}<br>
+        <b>Severidad:</b> ${r.problem.sev}<br>
+        <b>Resolución ADA:</b> ${r.problem.action}<br>
+        <b>Tiempo total:</b> ${r.lat}ms · <b>API calls:</b> ${r.calls}
+      </div>
+      <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">Flujo de llamadas API:</div>
+      ${flow.map(c => `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;padding:4px 8px;background:#1a2332;border-radius:4px">
+        <span style="font-size:11px;color:#94a3b8;width:65px">${c.f}</span>
+        <span style="font-size:11px;color:${mC(c.m)};font-weight:700;width:60px;text-align:center">${c.m}</span>
+        <div style="flex:1;height:1px;background:#3b82f6"></div>
+        <span style="font-size:11px;color:#94a3b8;width:65px;text-align:right">${c.t}</span>
+        <span style="font-size:11px;color:#22c55e;width:40px;text-align:right">${c.ms}ms</span>
+      </div>`).join('')}`);
+    }
+
+    // ── MAP ──
+    let mapInstance = null;
+    let mapMarkers = [];
+
+    function initMap() {
+      const container = document.getElementById('map-container');
+      if (!container) return;
+      if (mapInstance) { try { mapInstance.remove(); } catch (e) { } mapInstance = null; }
+      mapMarkers = [];
+
+      // Ensure container is empty
+      container.innerHTML = '';
+
+      const CEDIS = [19.3595, -99.2738];
+      mapInstance = L.map(container, { zoomControl: true }).setView(CEDIS, 12);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(mapInstance);
+
+      // Fix rendering after container becomes visible
+      setTimeout(() => { if (mapInstance) mapInstance.invalidateSize(); }, 200);
+
+      // CEDIS marker
+      const cedisIcon = L.divIcon({ html: '🏭', className: '', iconSize: [24, 24], iconAnchor: [12, 12] });
+      L.marker(CEDIS, { icon: cedisIcon }).addTo(mapInstance).bindPopup('<b>CEDIS Santa Fe</b><br>Base operativa Liverpool');
+
+      // Get visits with coordinates
+      const visits = state.srData?.visits || [];
+      const resolvedTitles = state.resolved.map(r => r.visit);
+      const pendingTitles = state.incidents.map(i => i.visit);
+      const bounds = [CEDIS];
+
+      visits.forEach(v => {
+        if (!v.latitude || !v.longitude) return;
+        const isResolved = resolvedTitles.includes(v.title);
+        const isPending = pendingTitles.includes(v.title);
+
+        // Filter logic
+        if (state.mapFilter === 'ok' && !isResolved) return;
+        if (state.mapFilter === 'pending' && !isPending) return;
+
+        const color = isResolved ? '#22c55e' : isPending ? '#f59e0b' : '#3b82f6';
+        const status = isResolved ? '✅ Resuelta' : isPending ? '⏳ Pendiente' : '📦 Programada';
+        const icon = L.divIcon({
+          html: `<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 0 4px ${color}"></div>`,
+          className: '', iconSize: [12, 12], iconAnchor: [6, 6]
+        });
+        const marker = L.marker([v.latitude, v.longitude], { icon }).addTo(mapInstance)
+          .bindPopup(`<b>${v.title}</b><br>${v.address || ''}<br><span style="color:${color}">${status}</span><br>Carga: ${v.load || 0} paq`);
+        mapMarkers.push(marker);
+        bounds.push([v.latitude, v.longitude]);
+
+        // Draw line from CEDIS
+        L.polyline([CEDIS, [v.latitude, v.longitude]], { color, weight: 1.5, opacity: 0.5, dashArray: isResolved ? '' : '4' }).addTo(mapInstance);
+      });
+
+      if (bounds.length > 1) mapInstance.fitBounds(bounds, { padding: [30, 30] });
+    }
+
+    // Map init after render when on step 3
+    let _mapScheduled = false;
+    const _baseRender = render;
+    render = function () {
+      _baseRender();
+      if (state.step === 3 && !_mapScheduled) {
+        _mapScheduled = true;
+        setTimeout(() => { initMap(); _mapScheduled = false; }, 100);
+      }
+    };
+
+    function setMapFilter(f) { state.mapFilter = f; _baseRender(); setTimeout(initMap, 100); }
+
+    render();
+    autoConnect();
+  </script>
+  <elevenlabs-convai agent-id="agent_3301ksb24hn7e5zt4xc0g96npa6s"></elevenlabs-convai>
+  <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+</body>
+
+</html>

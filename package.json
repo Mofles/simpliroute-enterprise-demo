@@ -1,0 +1,19 @@
+{
+  "name": "simpliroute-enterprise-demo",
+  "version": "1.0.0",
+  "description": "SimpliRoute Enterprise Integration Demo — Last Mile Retail Simulator with AI",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "author": "José Luis Arellano <moflesillo@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
