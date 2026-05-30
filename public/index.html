@@ -471,7 +471,11 @@
       <a href="https://app2.simpliroute.com" target="_blank" class="btn btn-cta" style="font-size:12px;padding:7px 14px;text-decoration:none">🚀 Ver en SimpliRoute</a>
     </div>
   </div>
-  <div class="steps">${steps.map((s, i) => `<button class="step-btn ${i === state.step ? 'active' : ''}${i < state.step ? ' done' : ''}${i > state.maxStep ? ' disabled' : ''}" onclick="${i <= state.maxStep ? `goStep(${i})` : ''}" ${i > state.maxStep ? 'disabled' : ''}>${i < state.step ? '✓ ' : ''}${i + 1}. ${s}</button>`).join('')}</div>
+  <div class="steps">${steps.map((s, i) => {
+        const locked = i > state.maxStep;
+        const hints = ['', 'Haz click en Comenzar demostracion', 'Crea la operacion Liverpool primero', 'Ejecuta la simulacion primero', 'Revisa los resultados primero'];
+        return `<button class="step-btn ${i === state.step ? 'active' : ''}${i < state.step ? ' done' : ''}${locked ? ' disabled' : ''}" onclick="${!locked ? `goStep(${i})` : ''}" ${locked ? `disabled title="${hints[i] || 'Completa el paso anterior'}"` : ''}>${i < state.step ? '✓ ' : ''}${locked ? '🔒 ' : ''}${i + 1}. ${s}</button>`;
+      }).join('')}</div>
   <div style="padding:14px;max-height:calc(100vh - 100px);overflow-y:auto">`;
 
       // STEP 0: Objetivo
