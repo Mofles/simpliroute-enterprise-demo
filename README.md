@@ -9,6 +9,41 @@ Developed by **José Luis Arellano** — Forward Deployed Engineer
 3. New Project → Deploy from GitHub
 4. Selecciona el repo → Deploy
 
+## Deploy en Vercel
+1. Instala Vercel CLI: `npm i -g vercel`
+2. En la raíz del proyecto ejecuta:
+```bash
+vercel
+```
+3. Sigue las instrucciones (selecciona tu cuenta, confirma el directorio)
+4. Para producción:
+```bash
+vercel --prod
+```
+
+> **Nota:** Como el proyecto usa un servidor Express, necesitas configurar `vercel.json` en la raíz:
+
+```json
+{
+  "version": 2,
+  "builds": [
+    { "src": "server.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "server.js" },
+    { "src": "/(.*)", "dest": "public/$1" }
+  ]
+}
+```
+
+Alternativamente, puedes hacer deploy desde el dashboard:
+1. Ve a [vercel.com](https://vercel.com)
+2. Import Project → selecciona tu repo de GitHub
+3. Framework Preset: **Other**
+4. Deploy
+
+El proyecto estará disponible en `https://tu-proyecto.vercel.app`
+
 ## Deploy local
 ```bash
 npm install
